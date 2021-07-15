@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MainGrid } from '../components/MainGrid'
 import { Box } from '../components/Box'
 import { ProfileRelationsBoxWrapper } from '../components/Box/ProfileRelations'
@@ -6,11 +6,44 @@ import { ProfileSidebar } from '../components/Box/ProfileSideBar'
 
 import { AlurakutMenu, OrkutNostalgicIconSet } from '../lib'
 
+const ProfileRelationsBox = (props) => {
+  return (
+    <ProfileRelationsBoxWrapper>
+      <h2 className="smallTitle">
+        {props.title} ({props.items.length})
+      </h2>
+
+      <ul>
+        {props.items.map((value) => {
+          return (
+            <li key={value.id}>
+              <a href={value.html_url} >
+                <img src={`https://github.com/${value.login}.png`} alt={'user pic'} />
+                <span>{value.login}</span>
+              </a>
+            </li>
+          )
+
+        })}
+      </ul>
+    </ProfileRelationsBoxWrapper>
+  )
+}
+
 export default function Home() {
+
   const [comunities, setComunities] = useState([{
     title: 'Eu odeio acordar cedo',
     image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
   }])
+
+
+  const [followers, setFollowers] = useState([])
+  useEffect(() => {
+    fetch(`https://api.github.com/users/${githubuser}/followers`)
+      .then((response) => response.json())
+      .then((dataResponse) => setFollowers(dataResponse))
+  }, [])
 
   const githubuser = 'huberthvladimir'
   const favoritePersons = [
@@ -75,6 +108,7 @@ export default function Home() {
         </section>
 
         <aside className="profileRelationsArea">
+          <ProfileRelationsBox title='followers' items={followers} />
           <ProfileRelationsBoxWrapper>
             <h2 className="smallTitle">
               Comunidades ({comunities.length})
@@ -99,7 +133,14 @@ export default function Home() {
             </h2>
 
             <ul>
-              {favoritePersons.map((value) => {
+              {[
+                'juunegreiros',
+                'omariosouto',
+                'peas',
+                'rafaballerini',
+                'marcobrunodev',
+                'felipefialho'
+              ].map((value) => {
                 return (
                   <li key={value}>
                     <a href={`/users/${value}`} >
