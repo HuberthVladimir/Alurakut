@@ -32,17 +32,37 @@ const ProfileRelationsBox = (props) => {
 
 export default function Home() {
 
-  const [comunities, setComunities] = useState([{
-    title: 'Eu odeio acordar cedo',
-    image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
-  }])
-
-
+  const [comunities, setComunities] = useState([])
   const [followers, setFollowers] = useState([])
+
   useEffect(() => {
     fetch(`https://api.github.com/users/${githubuser}/followers`)
       .then((response) => response.json())
       .then((dataResponse) => setFollowers(dataResponse))
+
+    //api GraphQL
+    fetch('https://graphQl.datocms.com/', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'e4f45f862dffeb426ba555390d45ba',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        "query": `query 
+        {
+          allCommunities {
+            id
+            title
+            imageUrl
+            creatorSlug
+          }
+        }
+      `})
+    })
+      .then((response) => response.json())
+      .then((response) => setComunities(response.data.allCommunities))
+
   }, [])
 
   const githubuser = 'huberthvladimir'
@@ -73,14 +93,32 @@ export default function Home() {
           <Box>
             <h2 className="subTitle">O que você deseja Fazer?</h2>
             <form onSubmit={(e) => {
+
               e.preventDefault();
               const dataForm = new FormData(e.target)
+
+              console.log(dataForm.get('image'))
+
               const dataComunity = {
                 title: dataForm.get('title'),
-                image: dataForm.get('image')
+                imageUrl: dataForm.get('image'),
+                creatorSlug: githubuser
               }
-              const activesComunity = [...comunities, dataComunity]
-              setComunities(activesComunity)
+
+              fetch('/api/comunities', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataComunity)
+              })
+                .then(async (response) => {
+                  const responseJson = await response.json()
+                  const comunity = responseJson.registerComunities
+                  const activesComunity = [...comunities, comunity]
+                  setComunities(activesComunity)
+                })
+
             }}
             >
               <div>
@@ -94,9 +132,9 @@ export default function Home() {
 
               <div>
                 <input
-                  placeholder="Coloque um URL para usarmos de capa?"
-                  name="title"
-                  aria-label="Coloque um URL para usarmos de capa?"
+                  placeholder="Coloque um URL para usarmos de capa"
+                  name="image"
+                  aria-label="Coloque um URL para usarmos de capa"
                 />
               </div>
 
@@ -114,11 +152,11 @@ export default function Home() {
               Comunidades ({comunities.length})
             </h2>
             <ul>
-              {comunities.map((value, index) => {
+              {comunities.map((value) => {
                 return (
-                  <li key={index}>
-                    <a href={`/users/${value.title}`} >
-                      <img src={value.image} alt={value.title + 'pic'} />
+                  <li key={value.id}>
+                    <a href={`/comunities/${value.id}`} >
+                      <img src={value.imageUrl} alt={value.title + 'pic'} />
                       <span>{value.title}</span>
                     </a>
                   </li>
